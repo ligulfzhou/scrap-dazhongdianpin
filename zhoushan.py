@@ -1,4 +1,3 @@
-import time
 import urllib.request
 from urllib.request import Request, urlopen
 import pymongo
@@ -6,20 +5,9 @@ from bs4 import BeautifulSoup
 
 
 zhoushan = pymongo.MongoClient('127.0.0.1:27017').zhoushan
-# util = pymongo.MongoClient('127.0.0.1:27017').util
-#
-# def mongo_uid(dbname, colname):
-#     coll = util.sequence
-#     now = round(time.time() * 1000)
-#     update = {'$inc': {'seq': 1}, '$set': {'modified': now}}
-#     ret = coll.find_and_modify({'dbname': dbname, 'colname': colname}, update, new=True, fields={'_id': 0, 'seq': 1})
-#     return ret['seq']
 
 
-#  name:   ***,    mobile: ***,    category: ***
-def insert_into_mongodb(dbname, name, categoty, mobile):
-    # data_id = mongo_uid(dbname, 'store')
-    # xihuqu.store.insert({'id': data_id, 'name': name, 'mobile': mobile, 'category': categoty})
+def insert_into_mongodb(name, categoty, mobile):
     zhoushan.store.insert({'name': name, 'mobile': mobile, 'category': categoty})
 
 
@@ -28,11 +16,11 @@ def url_with_page(url, pages):
         yield url + '/p' + str(i)
 
 urls = url_with_page('http://www.dianping.com/search/category/107/45', 9)
+header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36'}
 
 
 def get_mobile(href):
-    req = Request('http://www.dianping.com' + href, data=None, headers={
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36'})
+    req = Request('http://www.dianping.com' + href, data=None, headers=header)
     with urlopen(req) as f:
         data = f.read()
     soup = BeautifulSoup(data)
@@ -41,7 +29,7 @@ def get_mobile(href):
 
 def scrapy():
     for url in urls:
-        req = Request(url, data=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.110 Safari/537.36'})
+        req = Request(url, data=None, headers=header)
 
         with urllib.request.urlopen(req) as f:
             html = f.read()
@@ -53,10 +41,8 @@ def scrapy():
         for li in lis:
             a_s = li.find_all('a')
             href = a_s[0]['href']
-            # time.sleep(5)
             mobiles = get_mobile(href)
-            insert_into_mongodb('zhoushan', a_s[1]['title'], li.find('span', attrs={'class': 'tag'}).text, mobiles)
-        # time.sleep(5)
+            insert_into_mongodb(a_s[1]['title'], li.find('span', attrs={'class': 'tag'}).text, mobiles)
 
 
 if __name__ == '__main__':
