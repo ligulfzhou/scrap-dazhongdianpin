@@ -6,7 +6,7 @@ mongodb = pymongo.MongoClient('127.0.0.1:27017')
 
 
 def export_xlsx(data, export_filename):
-    '''data = [{'sheetname': '总览', titles: ['1', '2', '3'], data: [{1,2,3}, {2,3,4}, {3,4,5}]}]'''
+    '''data = [{'sheetname': '总览', titles: ['1', '2', '3'], data: [[1,2,3], [2,3,4], [3,4,5]]}]'''
     assert isinstance(data, list)
     wb = openpyxl.Workbook()
     # 这个alignment和上一个的style功能一样
